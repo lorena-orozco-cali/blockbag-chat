@@ -59,13 +59,7 @@
   </div>
 </div>
 <script>
-const CONOCIMIENTO = `Eres el asistente virtual de BlockBag, empresa colombiana fabricante de forros protectores para maletas de viaje, con sede en Cali, Colombia. Responde siempre en español, de forma amable, cálida y concisa. Máximo 3-4 líneas por respuesta. Cuando el cliente quiera hablar con un asesor, dile que en breve un asesor lo contactará y pídele su nombre y número de contacto.\n\nINFORMACIÓN REAL DE BLOCKBAG:\n- Producto principal: Forros protectores para maletas de viaje\n- Fabricación: 100% colombiana, insumos y mano de obra nacional\n- Calidad: Alta calidad, telas resistentes e impermeables\n- Característica especial: Arandelas de seguridad con candado BlockBag para proteger contra robo\n- Variedad: Gran variedad de estampados y diseños\n- Tallas: Se adaptan a maletas pequeñas (cabina), medianas y grandes\n- Materiales: Telas de alta tecnología, resistentes y durables\n- Envíos: Envíos nacionales a todo Colombia\n- Instagram: @blockbagcali\n- Por mayor: Para empresas que quieran forros con logo corporativo, contactar asesor\n- Garantía: Productos de alta calidad con respaldo de la marca\n- Precios: El cliente debe preguntar al asesor o visitar blockbag.co\n\nSi no sabes algo específico, pide nombre y WhatsApp para que un asesor lo contacte.`;
-
-const conversacion = [
-  { role: "user", content: CONOCIMIENTO },
-  { role: "assistant", content: "Entendido, estoy listo para asesorar a los clientes de BlockBag." }
-];
-
+const conversacion = [];
 const MENU = [
   { icon: "📐", label: "Tallas disponibles" },
   { icon: "🎨", label: "Estampados y colores" },
@@ -76,83 +70,76 @@ const MENU = [
   { icon: "🏭", label: "Por mayor / Empresas" },
   { icon: "👤", label: "Hablar con asesor" }
 ];
-
 function addMsg(role, content, isMenu) {
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = `msg ${role}`;
-  if (isMenu) {
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.textContent = content;
-    div.appendChild(bubble);
-    const grid = document.createElement('div');
-    grid.className = 'options-grid';
-    MENU.forEach(opt => {
-      const btn = document.createElement('button');
-      btn.className = 'opt-btn';
-      btn.innerHTML = `<span>${opt.icon}</span>${opt.label}`;
-      btn.onclick = () => handleOption(opt.label);
-      grid.appendChild(btn);
-    });
-    div.appendChild(grid);
-  } else {
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.innerHTML = content.replace(/\n/g, '<br>');
-    div.appendChild(bubble);
-  }
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
+const msgs = document.getElementById('messages');
+const div = document.createElement('div');
+div.className = msg ${role};
+if (isMenu) {
+const bubble = document.createElement('div');
+bubble.className = 'bubble';
+bubble.textContent = content;
+div.appendChild(bubble);
+const grid = document.createElement('div');
+grid.className = 'options-grid';
+MENU.forEach(opt => {
+const btn = document.createElement('button');
+btn.className = 'opt-btn';
+btn.innerHTML = <span>${opt.icon}</span>${opt.label};
+btn.onclick = () => handleOption(opt.label);
+grid.appendChild(btn);
+});
+div.appendChild(grid);
+} else {
+const bubble = document.createElement('div');
+bubble.className = 'bubble';
+bubble.innerHTML = content.replace(/\n/g, '<br>');
+div.appendChild(bubble);
 }
-
+msgs.appendChild(div);
+msgs.scrollTop = msgs.scrollHeight;
+}
 function showTyping() {
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = 'msg bot';
-  div.id = 'typing';
-  div.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
+const msgs = document.getElementById('messages');
+const div = document.createElement('div');
+div.className = 'msg bot';
+div.id = 'typing';
+div.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+msgs.appendChild(div);
+msgs.scrollTop = msgs.scrollHeight;
 }
-
 function removeTyping() {
-  const t = document.getElementById('typing');
-  if (t) t.remove();
+const t = document.getElementById('typing');
+if (t) t.remove();
 }
-
 async function askAI(mensaje) {
-  conversacion.push({ role: "user", content: mensaje });
-  showTyping();
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, messages: conversacion })
-    });
-    const data = await res.json();
-    const respuesta = data.content?.[0]?.text || "Disculpa, hubo un error.";
-    conversacion.push({ role: "assistant", content: respuesta });
-    removeTyping();
-    addMsg('bot', respuesta);
-  } catch(e) {
-    removeTyping();
-    addMsg('bot', "Disculpa, en este momento no puedo responder. Escríbenos al WhatsApp de BlockBag. 💛");
-  }
+conversacion.push({ role: "user", content: mensaje });
+showTyping();
+try {
+const res = await fetch("/api/chat", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ messages: conversacion })
+});
+const data = await res.json();
+conversacion.push({ role: "assistant", content: data.reply });
+removeTyping();
+addMsg('bot', data.reply);
+} catch(e) {
+removeTyping();
+addMsg('bot', "Disculpa, en este momento no puedo responder. Escríbenos al WhatsApp de BlockBag. 💛");
 }
-
+}
 function handleOption(opcion) { addMsg('user', opcion); askAI(opcion); }
 function sendMsg() {
-  const input = document.getElementById('userInput');
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = '';
-  addMsg('user', msg);
-  askAI(msg);
+const input = document.getElementById('userInput');
+const msg = input.value.trim();
+if (!msg) return;
+input.value = '';
+addMsg('user', msg);
+askAI(msg);
 }
-
 setTimeout(() => {
-  addMsg('bot', '¡Hola! 👋 Bienvenido a BlockBag, fabricantes de los mejores forros protectores para maletas de viaje en Colombia. ¿En qué te puedo ayudar hoy?', true);
+addMsg('bot', '¡Hola! 👋 Bienvenido a BlockBag, fabricantes de los mejores forros protectores para maletas de viaje en Colombia. ¿En qué te puedo ayudar hoy?', true);
 }, 500);
 </script>
 </body>
